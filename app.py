@@ -143,6 +143,11 @@ def t(key, **kwargs):
         return text
 
 
+def l(fr, en, ar):
+    """Inline translation helper for one-off strings."""
+    return {"fr": fr, "en": en, "ar": ar}.get(st.session_state.get("lang", "en"), en)
+
+
 # Add a few common label translations
 TRANSLATIONS.update({
     "label.month": {"fr": "Mois", "en": "Month", "ar": "الشهر"},
@@ -629,100 +634,110 @@ def show_submit_report():
     wilayas = sorted(set(u["wilaya"] for u in universities))
 
     with st.form("report_form", clear_on_submit=False):
-        st.markdown("### 🏫 Étape 1 – Identification de l'établissement")
+        st.markdown("### " + l("🏫 Étape 1 – Identification de l'établissement", "🏫 Step 1 - Institution details", "🏫 الخطوة 1 - بيانات المؤسسة"))
         col1, col2 = st.columns([1, 2])
         with col1:
-            selected_wilaya = st.selectbox("Wilaya *", ["(Toutes)"] + wilayas)
+            selected_wilaya = st.selectbox(l("Wilaya *", "Wilaya *", "الولاية *"), [l("(Toutes)", "(All)", "(الكل)")] + wilayas)
         with col2:
             filtered_unis = [u["name"] for u in universities
-                             if selected_wilaya == "(Toutes)" or u["wilaya"] == selected_wilaya]
-            selected_uni_name = st.selectbox("Université / École *", filtered_unis)
+                             if selected_wilaya == l("(Toutes)", "(All)", "(الكل)") or u["wilaya"] == selected_wilaya]
+            selected_uni_name = st.selectbox(l("Université / École *", "University / School *", "الجامعة / المدرسة *"), filtered_unis)
 
-        location_type = st.selectbox("Lieu concerné *", db.LOCATION_TYPES)
+        location_type = st.selectbox(l("Lieu concerné *", "Affected location *", "الموقع المتأثر *"), db.LOCATION_TYPES)
 
         st.divider()
-        st.markdown("### 🗂️ Étape 2 – Classification du problème")
+        st.markdown("### " + l("🗂️ Étape 2 – Classification du problème", "🗂️ Step 2 - Issue classification", "🗂️ الخطوة 2 - تصنيف المشكلة"))
         col3, col4 = st.columns(2)
         with col3:
-            selected_category = st.selectbox("Catégorie principale *", list(db.CATEGORIES.keys()))
+            selected_category = st.selectbox(l("Catégorie principale *", "Main category *", "الفئة الرئيسية *"), list(db.CATEGORIES.keys()))
         with col4:
             subcats = db.CATEGORIES.get(selected_category, ["Autre"])
-            selected_subcat = st.selectbox("Sous-catégorie *", subcats)
+            selected_subcat = st.selectbox(l("Sous-catégorie *", "Subcategory *", "الفئة الفرعية *"), subcats)
 
-        st.markdown("**Niveau de gravité** *")
+        st.markdown("**" + l("Niveau de gravité", "Severity level", "مستوى الخطورة") + "** *")
         severity = st.slider(
-            "Gravité (1 = très faible, 5 = critique)", 1, 5, 3,
-            help="1: Inconfort mineur | 3: Problème sérieux | 5: Urgence/danger",
+            l("Gravité (1 = très faible, 5 = critique)", "Severity (1 = very low, 5 = critical)", "الخطورة (1 = منخفضة جدًا، 5 = حرجة)"), 1, 5, 3,
+            help=l("1: Inconfort mineur | 3: Problème sérieux | 5: Urgence/danger", "1: Minor discomfort | 3: Serious issue | 5: Emergency/danger", "1: إزعاج بسيط | 3: مشكلة خطيرة | 5: طارئ/خطر"),
         )
         sev_color = SEVERITY_COLORS[severity]
         sev_label = SEVERITY_LABELS[severity]
         st.markdown(
             f'<div style="background:{sev_color}22;border-left:4px solid {sev_color};'
             f'border-radius:8px;padding:10px 16px;color:{sev_color};font-weight:600">'
-            f'Gravité sélectionnée : {sev_label}</div>',
+            f'{l("Gravité sélectionnée", "Selected severity", "الخطورة المحددة")} : {sev_label}</div>',
             unsafe_allow_html=True,
         )
 
         st.divider()
-        st.markdown("### ✍️ Étape 3 – Description du problème")
+        st.markdown("### " + l("✍️ Étape 3 – Description du problème", "✍️ Step 3 - Problem description", "✍️ الخطوة 3 - وصف المشكلة"))
         title = st.text_input(
-            "Titre du signalement *",
-            placeholder="Ex: Fuite de toiture dans l'Amphi B depuis 2 semaines",
+            l("Titre du signalement *", "Report title *", "عنوان البلاغ *"),
+            placeholder=l("Ex: Fuite de toiture dans l'Amphi B depuis 2 semaines", "Ex: Roof leak in Amphitheater B for 2 weeks", "مثال: تسرب سقف في المدرج ب منذ أسبوعين"),
             max_chars=120,
         )
         description = st.text_area(
-            "Description détaillée *",
+            l("Description détaillée *", "Detailed description *", "وصف مفصل *"),
             placeholder=(
-                "Décrivez le problème en détail :\n"
-                "– Depuis quand existe-t-il ?\n"
-                "– Combien d'étudiants sont affectés ?\n"
-                "– L'administration a-t-elle été informée ?\n"
-                "– Quelles conséquences cela entraîne-t-il ?"
+                l("Décrivez le problème en détail :\n"
+                  "– Depuis quand existe-t-il ?\n"
+                  "– Combien d'étudiants sont affectés ?\n"
+                  "– L'administration a-t-elle été informée ?\n"
+                  "– Quelles conséquences cela entraîne-t-il ?",
+                  "Describe the problem in detail:\n"
+                  "– Since when does it exist?\n"
+                  "– How many students are affected?\n"
+                  "– Was the administration informed?\n"
+                  "– What are the consequences?",
+                  "صف المشكلة بالتفصيل:\n"
+                  "– منذ متى وهي موجودة؟\n"
+                  "– كم عدد الطلبة المتأثرين؟\n"
+                  "– هل تم إبلاغ الإدارة؟\n"
+                  "– ما النتائج المترتبة؟")
             ),
             height=200,
             max_chars=2000,
         )
-        st.caption(f"{'('+str(len(description))+'/2000 caractères)' if description else '0/2000 caractères'}")
+        st.caption(f"{'('+str(len(description))+'/2000 '+l('caractères','characters','حرف')+')' if description else '0/2000 '+l('caractères','characters','حرف')}")
 
         st.divider()
-        st.markdown("### 📸 Étape 4 – Preuves photographiques (optionnel)")
+        st.markdown("### " + l("📸 Étape 4 – Preuves photographiques (optionnel)", "📸 Step 4 - Photo evidence (optional)", "📸 الخطوة 4 - أدلة مصورة (اختياري)"))
         st.markdown(
             '<div class="info-box">📷 Ajoutez jusqu\'à <strong>5 photos</strong> pour appuyer votre signalement. '
             'Les images seront redimensionnées automatiquement (max 10 Mo par fichier).</div>',
             unsafe_allow_html=True,
         )
         uploaded_files = st.file_uploader(
-            "Télécharger des photos",
+            l("Télécharger des photos", "Upload photos", "رفع الصور"),
             type=["jpg", "jpeg", "png", "webp"],
             accept_multiple_files=True,
         )
         if uploaded_files:
             if len(uploaded_files) > 5:
-                st.warning("⚠️ Maximum 5 photos. Seules les 5 premières seront prises en compte.")
+                st.warning(l("⚠️ Maximum 5 photos. Seules les 5 premières seront prises en compte.", "⚠️ Maximum 5 photos. Only the first 5 will be kept.", "⚠️ الحد الأقصى 5 صور. سيتم اعتماد أول 5 فقط."))
                 uploaded_files = uploaded_files[:5]
             preview_cols = st.columns(len(uploaded_files))
             for i, f in enumerate(uploaded_files):
                 with preview_cols[i]:
-                    st.image(f, use_container_width=True, caption=f"Photo {i+1}")
+                    st.image(f, use_container_width=True, caption=f"{l('Photo','Photo','صورة')} {i+1}")
 
         captions = []
         if uploaded_files:
-            st.markdown("**Légendes des photos (optionnel)**")
+            st.markdown("**" + l("Légendes des photos (optionnel)", "Photo captions (optional)", "تسميات الصور (اختياري)") + "**")
             for i, f in enumerate(uploaded_files[:5]):
-                cap = st.text_input(f"Légende photo {i+1}", placeholder="Description courte…", key=f"cap_{i}")
+                cap = st.text_input(f"{l('Légende photo','Photo caption','تسمية الصورة')} {i+1}", placeholder=l("Description courte…", "Short description...", "وصف قصير..."), key=f"cap_{i}")
                 captions.append(cap)
 
         st.divider()
-        st.markdown("### 👤 Étape 5 – Vos coordonnées (optionnel)")
-        is_anon = st.checkbox("Soumettre de manière anonyme", value=True)
+        st.markdown("### " + l("👤 Étape 5 – Vos coordonnées (optionnel)", "👤 Step 5 - Your details (optional)", "👤 الخطوة 5 - بياناتك (اختياري)"))
+        is_anon = st.checkbox(l("Soumettre de manière anonyme", "Submit anonymously", "إرسال بشكل مجهول"), value=True)
         reporter_name  = ""
         reporter_email = ""
         if not is_anon:
             col5, col6 = st.columns(2)
             with col5:
-                reporter_name = st.text_input("Prénom et Nom", max_chars=80)
+                reporter_name = st.text_input(l("Prénom et Nom", "Full name", "الاسم الكامل"), max_chars=80)
             with col6:
-                reporter_email = st.text_input("Email universitaire", placeholder="prenom.nom@univ-xx.dz")
+                reporter_email = st.text_input(l("Email universitaire", "University email", "البريد الجامعي"), placeholder="prenom.nom@univ-xx.dz")
             st.markdown(
                 '<div class="warn-box">🔒 Vos coordonnées ne seront <strong>jamais partagées publiquement</strong>. '
                 'Elles servent uniquement à vous contacter si nécessaire.</div>',
@@ -735,10 +750,11 @@ def show_submit_report():
             )
 
         st.divider()
-        st.markdown("### ✅ Étape 6 – Confirmation")
+        st.markdown("### " + l("✅ Étape 6 – Confirmation", "✅ Step 6 - Confirmation", "✅ الخطوة 6 - التأكيد"))
         agree = st.checkbox(
-            "Je certifie que ces informations sont exactes et de bonne foi. "
-            "Je comprends que les faux signalements nuisent à la crédibilité de la plateforme."
+            l("Je certifie que ces informations sont exactes et de bonne foi. Je comprends que les faux signalements nuisent à la crédibilité de la plateforme.",
+              "I confirm that this information is accurate and submitted in good faith. I understand false reports harm platform credibility.",
+              "أؤكد أن هذه المعلومات دقيقة ومقدمة بحسن نية. وأفهم أن البلاغات الكاذبة تضر بمصداقية المنصة.")
         )
 
         submitted = st.form_submit_button(
@@ -750,13 +766,13 @@ def show_submit_report():
     if submitted:
         errors = []
         if not selected_uni_name:
-            errors.append("Université requise.")
+            errors.append(l("Université requise.", "University is required.", "الجامعة مطلوبة."))
         if not title or len(title.strip()) < 10:
-            errors.append("Titre trop court (minimum 10 caractères).")
+            errors.append(l("Titre trop court (minimum 10 caractères).", "Title too short (minimum 10 characters).", "العنوان قصير جدًا (10 أحرف على الأقل)."))
         if not description or len(description.strip()) < 30:
-            errors.append("Description trop courte (minimum 30 caractères).")
+            errors.append(l("Description trop courte (minimum 30 caractères).", "Description too short (minimum 30 characters).", "الوصف قصير جدًا (30 حرفًا على الأقل)."))
         if not agree:
-            errors.append("Vous devez cocher la case de confirmation.")
+            errors.append(l("Vous devez cocher la case de confirmation.", "You must check the confirmation box.", "يجب تحديد خانة التأكيد."))
 
         if errors:
             for e in errors:
@@ -798,7 +814,7 @@ def show_browse_reports():
     st.markdown(f"## {t('browse.title')}")
 
     universities = db.get_universities()
-    uni_options  = {"(Toutes les universités)": None}
+    uni_options  = {l("(Toutes les universités)", "(All universities)", "(كل الجامعات)"): None}
     for u in universities:
         uni_options[u["name"]] = u["id"]
 
@@ -807,23 +823,22 @@ def show_browse_reports():
         st.markdown("---")
         st.markdown(f"### {t('browse.filters')}")
         search_q    = st.text_input("🔎 ", placeholder=t('browse.search.placeholder'))
-        sel_uni     = st.selectbox("Université", list(uni_options.keys()), key="browse_uni")
-        sel_cat     = st.selectbox("Catégorie", ["(Toutes)"] + list(db.CATEGORIES.keys()), key="browse_cat")
-        sel_loc     = st.selectbox("Lieu", ["(Tous)"] + db.LOCATION_TYPES, key="browse_loc")
-        sev_range   = st.slider("Gravité", 1, 5, (1, 5), key="browse_sev")
-        sel_status  = st.selectbox("Statut", ["(Tous)"] + db.STATUS_OPTIONS, key="browse_status")
-        sort_by     = st.selectbox("Trier par", {
-            "newest":     "Plus récents",
-            "most_voted": "Plus soutenus",
-            "severity":   "Plus graves",
-            "oldest":     "Plus anciens",
-        }.keys(), format_func=lambda k: {"newest":"Plus récents","most_voted":"Plus soutenus","severity":"Plus graves","oldest":"Plus anciens"}[k])
+        sel_uni     = st.selectbox(l("Université", "University", "الجامعة"), list(uni_options.keys()), key="browse_uni")
+        sel_cat     = st.selectbox(l("Catégorie", "Category", "الفئة"), [l("(Toutes)", "(All)", "(الكل)")] + list(db.CATEGORIES.keys()), key="browse_cat")
+        sel_loc     = st.selectbox(l("Lieu", "Location", "الموقع"), [l("(Tous)", "(All)", "(الكل)")] + db.LOCATION_TYPES, key="browse_loc")
+        sev_range   = st.slider(l("Gravité", "Severity", "الخطورة"), 1, 5, (1, 5), key="browse_sev")
+        sel_status  = st.selectbox(l("Statut", "Status", "الحالة"), [l("(Tous)", "(All)", "(الكل)")] + db.STATUS_OPTIONS, key="browse_status")
+        sort_by     = st.selectbox(
+            l("Trier par", "Sort by", "ترتيب حسب"),
+            {"newest": l("Plus récents", "Newest", "الأحدث"), "most_voted": l("Plus soutenus", "Most supported", "الأكثر دعمًا"), "severity": l("Plus graves", "Most severe", "الأكثر خطورة"), "oldest": l("Plus anciens", "Oldest", "الأقدم")}.keys(),
+            format_func=lambda k: {"newest": l("Plus récents", "Newest", "الأحدث"), "most_voted": l("Plus soutenus", "Most supported", "الأكثر دعمًا"), "severity": l("Plus graves", "Most severe", "الأكثر خطورة"), "oldest": l("Plus anciens", "Oldest", "الأقدم")}[k],
+        )
         st.markdown("---")
 
     uid     = uni_options.get(sel_uni)
-    cat     = None if sel_cat == "(Toutes)" else sel_cat
-    loc     = None if sel_loc == "(Tous)" else sel_loc
-    status  = None if sel_status == "(Tous)" else sel_status
+    cat     = None if sel_cat == l("(Toutes)", "(All)", "(الكل)") else sel_cat
+    loc     = None if sel_loc == l("(Tous)", "(All)", "(الكل)") else sel_loc
+    status  = None if sel_status == l("(Tous)", "(All)", "(الكل)") else sel_status
     q       = search_q.strip() if search_q else None
 
     reports = db.get_reports(
@@ -873,7 +888,7 @@ def show_browse_reports():
                 # Images
                 images = db.get_images_for_report(r["id"])
                 if images:
-                    st.markdown("**📸 Photos :**")
+                    st.markdown("**" + l("📸 Photos :", "📸 Photos:", "📸 الصور:") + "**")
                     img_cols = st.columns(min(len(images), 3))
                     for j, img in enumerate(images[:3]):
                         with img_cols[j]:
@@ -881,26 +896,26 @@ def show_browse_reports():
 
             with col_actions:
                 already = db.has_upvoted(r["id"], SESSION_HASH)
-                btn_label = f"{'❤️' if already else '🤍'} Soutenir ({r['upvotes']})"
+                btn_label = f"{'❤️' if already else '🤍'} {l('Soutenir', 'Support', 'دعم')} ({r['upvotes']})"
                 if st.button(btn_label, key=f"upvote_{r['id']}"):
                     new_count = db.toggle_upvote(r["id"], SESSION_HASH)
                     st.rerun()
 
                 # Status update (admin-like for demo)
-                st.markdown("**Mettre à jour le statut :**")
+                st.markdown("**" + l("Mettre à jour le statut :", "Update status:", "تحديث الحالة:") + "**")
                 new_status = st.selectbox(
-                    "Statut", db.STATUS_OPTIONS,
+                    l("Statut", "Status", "الحالة"), db.STATUS_OPTIONS,
                     index=db.STATUS_OPTIONS.index(r["status"]) if r["status"] in db.STATUS_OPTIONS else 0,
                     key=f"status_{r['id']}",
                 )
-                if st.button("Enregistrer", key=f"save_status_{r['id']}"):
+                if st.button(l("Enregistrer", "Save", "حفظ"), key=f"save_status_{r['id']}"):
                     db.update_report_status(r["id"], new_status)
-                    st.success("Statut mis à jour !")
+                    st.success(l("Statut mis à jour !", "Status updated!", "تم تحديث الحالة!"))
                     st.rerun()
 
             # Comments
             st.markdown("---")
-            st.markdown("**💬 Commentaires**")
+            st.markdown("**" + l("💬 Commentaires", "💬 Comments", "💬 التعليقات") + "**")
             comments = db.get_comments(r["id"])
             if comments:
                 for c in comments:
@@ -913,18 +928,18 @@ def show_browse_reports():
                         unsafe_allow_html=True,
                     )
             else:
-                st.caption("Aucun commentaire. Soyez le premier à réagir.")
+                st.caption(l("Aucun commentaire. Soyez le premier à réagir.", "No comments yet. Be the first to react.", "لا توجد تعليقات بعد. كن أول من يعلّق."))
 
             with st.form(f"comment_form_{r['id']}"):
-                c_name = st.text_input("Votre nom (optionnel)", value="Anonyme", key=f"cname_{r['id']}")
-                c_text = st.text_area("Votre commentaire", height=80, key=f"ctext_{r['id']}")
-                if st.form_submit_button("Publier le commentaire"):
+                c_name = st.text_input(l("Votre nom (optionnel)", "Your name (optional)", "اسمك (اختياري)"), value=l("Anonyme", "Anonymous", "مجهول"), key=f"cname_{r['id']}")
+                c_text = st.text_area(l("Votre commentaire", "Your comment", "تعليقك"), height=80, key=f"ctext_{r['id']}")
+                if st.form_submit_button(l("Publier le commentaire", "Publish comment", "نشر التعليق")):
                     if c_text.strip():
-                        db.add_comment(r["id"], c_text.strip(), c_name or "Anonyme")
-                        st.success("Commentaire publié !")
+                        db.add_comment(r["id"], c_text.strip(), c_name or l("Anonyme", "Anonymous", "مجهول"))
+                        st.success(l("Commentaire publié !", "Comment posted!", "تم نشر التعليق!"))
                         st.rerun()
                     else:
-                        st.warning("Le commentaire ne peut pas être vide.")
+                        st.warning(l("Le commentaire ne peut pas être vide.", "Comment cannot be empty.", "لا يمكن أن يكون التعليق فارغًا."))
 
     _footer()
 
@@ -938,27 +953,27 @@ def show_dashboard():
 
     universities = db.get_universities()
     uni_names    = [u["name"] for u in universities]
-    selected_name = st.selectbox("🏫 Choisir une université", uni_names, key="dash_uni")
+    selected_name = st.selectbox(l("🏫 Choisir une université", "🏫 Choose a university", "🏫 اختر جامعة"), uni_names, key="dash_uni")
     selected_uni  = next(u for u in universities if u["name"] == selected_name)
     uid = selected_uni["id"]
 
     stats = db.get_university_stats(uid)
 
     if stats["total"] == 0:
-        st.info(f"Aucun signalement enregistré pour {selected_name} pour le moment.")
+        st.info(l(f"Aucun signalement enregistré pour {selected_name} pour le moment.", f"No reports recorded for {selected_name} yet.", f"لا توجد بلاغات مسجلة لـ {selected_name} حاليًا."))
         return
 
     # ── Metrics ──
-    st.markdown(f"### 📋 Vue d'ensemble — {selected_uni.get('short_name', selected_name)}")
+    st.markdown(f"### {l('📋 Vue d\'ensemble', '📋 Overview', '📋 نظرة عامة')} — {selected_uni.get('short_name', selected_name)}")
     m1, m2, m3, m4, m5, m6 = st.columns(6)
     metrics = [
-        (m1, stats["total"],       "Signalements total", ""),
-        (m2, stats["open"],        "Non résolus",         "red"),
-        (m3, stats["resolved"],    "Résolus",             ""),
-        (m4, f"{stats['avg_severity']:.1f}/5", "Gravité moy.", "amber"),
-        (m5, f"{stats['resolution_rate']}%", "Taux résolution", "blue"),
+        (m1, stats["total"],       l("Signalements total", "Total reports", "إجمالي البلاغات"), ""),
+        (m2, stats["open"],        l("Non résolus", "Unresolved", "غير محلول"), "red"),
+        (m3, stats["resolved"],    l("Résolus", "Resolved", "محلول"), ""),
+        (m4, f"{stats['avg_severity']:.1f}/5", l("Gravité moy.", "Avg severity", "متوسط الخطورة"), "amber"),
+        (m5, f"{stats['resolution_rate']}%", l("Taux résolution", "Resolution rate", "معدل الحل"), "blue"),
         (m6, stats["top_category"].split(" ")[0] if stats["top_category"] != "N/A" else "—",
-         "Catégorie principale", ""),
+         l("Catégorie principale", "Main category", "الفئة الرئيسية"), ""),
     ]
     for col, val, lbl, cls in metrics:
         with col:
@@ -979,8 +994,8 @@ def show_dashboard():
             df_t = pd.DataFrame(timeline)
             fig = px.bar(
                 df_t, x="month", y="count",
-                labels={"month": "Mois", "count": "Signalements"},
-                title="📅 Évolution mensuelle des signalements",
+                labels={"month": l("Mois", "Month", "الشهر"), "count": l("Signalements", "Reports", "البلاغات")},
+                title=l("📅 Évolution mensuelle des signalements", "📅 Monthly report trend", "📅 تطور البلاغات شهريًا"),
                 color_discrete_sequence=["#059669"],
             )
             fig.update_layout(
@@ -998,7 +1013,7 @@ def show_dashboard():
             df_c["name"]  = df_c["category"].str.split(" ", n=1).str[1]
             fig2 = px.pie(
                 df_c, values="count", names="category",
-                title="🗂️ Répartition par catégorie",
+                title=l("🗂️ Répartition par catégorie", "🗂️ Category breakdown", "🗂️ التوزيع حسب الفئة"),
                 hole=0.5,
                 color_discrete_sequence=px.colors.qualitative.Pastel,
             )
@@ -1020,7 +1035,7 @@ def show_dashboard():
             df_s["color"] = df_s["severity"].map(SEVERITY_COLORS)
             fig3 = px.bar(
                 df_s, x="label", y="count",
-                title="⚠️ Distribution par gravité",
+                title=l("⚠️ Distribution par gravité", "⚠️ Severity distribution", "⚠️ التوزيع حسب الخطورة"),
                 color="label",
                 color_discrete_map={v: SEVERITY_COLORS[k] for k, v in SEVERITY_LABELS.items()},
             )
@@ -1028,7 +1043,7 @@ def show_dashboard():
                 plot_bgcolor="white", paper_bgcolor="white",
                 font=dict(family="Inter"), margin=dict(t=40, b=20, l=10, r=10),
                 title_font_size=13, showlegend=False,
-                xaxis_title="", yaxis_title="Signalements",
+                xaxis_title="", yaxis_title=l("Signalements", "Reports", "البلاغات"),
             )
             st.plotly_chart(fig3, use_container_width=True)
 
@@ -1039,7 +1054,7 @@ def show_dashboard():
             status_color_list = [STATUS_COLORS.get(s, "#9ca3af") for s in df_st["status"]]
             fig4 = px.pie(
                 df_st, values="count", names="status",
-                title="📌 Statut des signalements",
+                title=l("📌 Statut des signalements", "📌 Report status", "📌 حالة البلاغات"),
                 color="status",
                 color_discrete_map=STATUS_COLORS,
             )
@@ -1056,7 +1071,7 @@ def show_dashboard():
             df_l = pd.DataFrame(locs).head(8)
             fig5 = px.bar(
                 df_l, x="count", y="location_type", orientation="h",
-                title="📍 Lieux les plus signalés",
+                title=l("📍 Lieux les plus signalés", "📍 Most reported locations", "📍 أكثر المواقع المُبلّغ عنها"),
                 color="count",
                 color_continuous_scale=[[0, "#bbf7d0"], [1, "#064e3b"]],
             )
@@ -1069,7 +1084,7 @@ def show_dashboard():
             st.plotly_chart(fig5, use_container_width=True)
 
     # ── Latest reports for this university ──
-    st.markdown(f'<div class="section-header">🕒 Derniers signalements – {selected_uni.get("short_name","")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-header">{l("🕒 Derniers signalements", "🕒 Latest reports", "🕒 أحدث البلاغات")} – {selected_uni.get("short_name","")}</div>', unsafe_allow_html=True)
     latest = db.get_reports(university_id=uid, sort_by="newest", limit=6)
     if latest:
         col1, col2 = st.columns(2)
@@ -1087,7 +1102,7 @@ def show_dashboard():
         ]
         csv = df_export.to_csv(index=False, encoding="utf-8-sig")
         st.download_button(
-            "⬇️ Exporter les signalements (CSV)",
+            l("⬇️ Exporter les signalements (CSV)", "⬇️ Export reports (CSV)", "⬇️ تصدير البلاغات (CSV)"),
             data=csv.encode("utf-8-sig"),
             file_name=f"signalements_{selected_uni['short_name']}_{datetime.now().strftime('%Y%m%d')}.csv",
             mime="text/csv",
@@ -1112,10 +1127,10 @@ def show_union_portal():
     st.markdown("### " + t('union.stats_title'))
     c1, c2, c3, c4 = st.columns(4)
     for col, val, lbl, cls in [
-        (c1, stats["total"],    "Signalements au total",  ""),
-        (c2, stats["pending"],  "En attente de réponse",  "red"),
-        (c3, stats["resolved"], "Résolus",                ""),
-        (c4, stats["universities"], "Universités touchées", "blue"),
+        (c1, stats["total"],    l("Signalements au total", "Total reports", "إجمالي البلاغات"), ""),
+        (c2, stats["pending"],  l("En attente de réponse", "Awaiting response", "بانتظار الرد"), "red"),
+        (c3, stats["resolved"], l("Résolus", "Resolved", "محلول"), ""),
+        (c4, stats["universities"], l("Universités touchées", "Universities affected", "الجامعات المتأثرة"), "blue"),
     ]:
         with col:
             st.markdown(
@@ -1127,16 +1142,16 @@ def show_union_portal():
 
     # ── Tabs ──
     tab1, tab2, tab3, tab4 = st.tabs([
-        "🏆 Classement des universités",
-        "🔥 Problèmes prioritaires",
-        "📈 Comparaison nationale",
-        "📄 Export & Advocacy",
+        l("🏆 Classement des universités", "🏆 University ranking", "🏆 ترتيب الجامعات"),
+        l("🔥 Problèmes prioritaires", "🔥 Priority issues", "🔥 المشكلات ذات الأولوية"),
+        l("📈 Comparaison nationale", "📈 National comparison", "📈 مقارنة وطنية"),
+        l("📄 Export & Advocacy", "📄 Export & Advocacy", "📄 التصدير والمناصرة"),
     ])
 
     # ── Tab 1: University Ranking ──
     with tab1:
-        st.markdown("### 🏆 Classement par nombre de signalements")
-        st.caption("Les universités avec le plus de signalements actifs ont le plus besoin d'attention.")
+        st.markdown("### " + l("🏆 Classement par nombre de signalements", "🏆 Ranking by number of reports", "🏆 الترتيب حسب عدد البلاغات"))
+        st.caption(l("Les universités avec le plus de signalements actifs ont le plus besoin d'attention.", "Universities with the most active reports need the most attention.", "الجامعات ذات البلاغات النشطة الأكثر تحتاج اهتمامًا أكبر."))
 
         ranking = db.get_university_ranking()
         if ranking:
@@ -1179,8 +1194,8 @@ def show_union_portal():
 
     # ── Tab 2: Priority Issues ──
     with tab2:
-        st.markdown("### 🔥 Problèmes prioritaires non résolus")
-        st.caption("Classés par score de priorité = upvotes × 2 + gravité × 10")
+        st.markdown("### " + l("🔥 Problèmes prioritaires non résolus", "🔥 Unresolved priority issues", "🔥 المشكلات ذات الأولوية غير المحلولة"))
+        st.caption(l("Classés par score de priorité = upvotes × 2 + gravité × 10", "Ranked by priority score = upvotes × 2 + severity × 10", "مرتبة حسب درجة الأولوية = عدد الدعم × 2 + الخطورة × 10"))
 
         priorities = db.get_top_priority_issues(limit=15)
         for i, r in enumerate(priorities):
@@ -1203,7 +1218,7 @@ def show_union_portal():
 
     # ── Tab 3: National Comparison ──
     with tab3:
-        st.markdown("### 📈 Analyse comparative nationale")
+        st.markdown("### " + l("📈 Analyse comparative nationale", "📈 National comparative analysis", "📈 تحليل مقارن وطني"))
 
         cats_data = db.get_category_breakdown()
         wilaya_data = db.get_wilaya_breakdown()
@@ -1263,7 +1278,7 @@ def show_union_portal():
 
     # ── Tab 4: Export & Advocacy ──
     with tab4:
-        st.markdown("### 📄 Export des données & Outils d'Advocacy")
+        st.markdown("### " + l("📄 Export des données & Outils d'Advocacy", "📄 Data export & advocacy tools", "📄 تصدير البيانات وأدوات المناصرة"))
 
         # Full export
         all_reports = db.get_reports()
@@ -1275,7 +1290,7 @@ def show_union_portal():
             df_export = df_all[[c for c in cols_export if c in df_all.columns]]
             csv_all = df_export.to_csv(index=False, encoding="utf-8-sig")
             st.download_button(
-                "⬇️ Exporter TOUS les signalements (CSV)",
+                l("⬇️ Exporter TOUS les signalements (CSV)", "⬇️ Export ALL reports (CSV)", "⬇️ تصدير كل البلاغات (CSV)"),
                 data=csv_all.encode("utf-8-sig"),
                 file_name=f"sawt_taleb_export_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
                 mime="text/csv",
@@ -1283,8 +1298,8 @@ def show_union_portal():
             )
 
         st.markdown("---")
-        st.markdown("### ✉️ Générateur de Lettre d'Advocacy")
-        st.caption("Générez une lettre officielle à destination du ministère ou de la direction universitaire.")
+        st.markdown("### " + l("✉️ Générateur de Lettre d'Advocacy", "✉️ Advocacy letter generator", "✉️ مولد رسالة مناصرة"))
+        st.caption(l("Générez une lettre officielle à destination du ministère ou de la direction universitaire.", "Generate an official letter for the ministry or university administration.", "أنشئ رسالة رسمية موجهة للوزارة أو إدارة الجامعة."))
 
         universities = db.get_universities()
         uni_names    = [u["name"] for u in universities]
@@ -1382,7 +1397,7 @@ def show_about():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("### 🎯 Notre Mission")
+        st.markdown("### " + l("🎯 Notre Mission", "🎯 Our mission", "🎯 مهمتنا"))
         st.markdown("""
         **Sawt Taleb** (صوت الطالب — "La Voix de l'Étudiant") est une plateforme citoyenne
         permettant aux étudiants algériens de :
@@ -1395,7 +1410,7 @@ def show_about():
         Notre objectif est simple : **transformer la frustration en action collective**.
         """)
 
-        st.markdown("### 🔒 Confidentialité & Sécurité")
+        st.markdown("### " + l("🔒 Confidentialité & Sécurité", "🔒 Privacy & security", "🔒 الخصوصية والأمان"))
         st.markdown("""
         - Les signalements anonymes sont **totalement protégés**
         - Aucune donnée personnelle n'est partagée avec des tiers
@@ -1404,7 +1419,7 @@ def show_about():
         """)
 
     with col2:
-        st.markdown("### 📖 Comment utiliser la plateforme")
+        st.markdown("### " + l("📖 Comment utiliser la plateforme", "📖 How to use the platform", "📖 كيفية استخدام المنصة"))
         st.markdown("""
         **1. Soumettre un signalement**
         Rendez-vous sur "📝 Soumettre un Signalement" et remplissez le formulaire en 6 étapes.
@@ -1427,7 +1442,7 @@ def show_about():
         """)
 
     st.markdown("---")
-    st.markdown("### ❓ Questions Fréquentes")
+    st.markdown("### " + l("❓ Questions Fréquentes", "❓ Frequently asked questions", "❓ الأسئلة الشائعة"))
 
     faqs = [
         ("Mes signalements sont-ils vraiment anonymes ?",
@@ -1455,7 +1470,7 @@ def show_about():
             st.markdown(answer)
 
     st.markdown("---")
-    st.markdown("### 📞 Contact & Signalement d'Abus")
+    st.markdown("### " + l("📞 Contact & Signalement d'Abus", "📞 Contact & abuse reporting", "📞 التواصل والإبلاغ عن الإساءة"))
     col_a, col_b, col_c = st.columns(3)
     with col_a:
         st.markdown("""
@@ -1482,11 +1497,11 @@ def show_about():
     st.markdown(
         f'<div style="text-align:center;padding:24px;background:linear-gradient(135deg,#064e3b,#059669);'
         f'border-radius:12px;color:white">'
-        f'<h3 style="margin:0 0 16px">Ensemble, nous avons déjà accompli</h3>'
-        f'<span style="font-size:2.5rem;font-weight:700">{stats["total"]}</span> signalements &nbsp;·&nbsp; '
-        f'<span style="font-size:2.5rem;font-weight:700">{stats["resolved"]}</span> résolus &nbsp;·&nbsp; '
-        f'<span style="font-size:2.5rem;font-weight:700">{stats["universities"]}</span> universités<br>'
-        f'<p style="margin-top:12px;opacity:0.85">Chaque signalement est une voix. Ensemble, nous changeons les choses.</p>'
+        f'<h3 style="margin:0 0 16px">{l("Ensemble, nous avons déjà accompli", "Together, we have already achieved", "معًا، لقد حققنا بالفعل")}</h3>'
+        f'<span style="font-size:2.5rem;font-weight:700">{stats["total"]}</span> {l("signalements", "reports", "بلاغات")} &nbsp;·&nbsp; '
+        f'<span style="font-size:2.5rem;font-weight:700">{stats["resolved"]}</span> {l("résolus", "resolved", "محلولة")} &nbsp;·&nbsp; '
+        f'<span style="font-size:2.5rem;font-weight:700">{stats["universities"]}</span> {l("universités", "universities", "جامعات")}<br>'
+        f'<p style="margin-top:12px;opacity:0.85">{l("Chaque signalement est une voix. Ensemble, nous changeons les choses.", "Every report is a voice. Together, we create change.", "كل بلاغ هو صوت. معًا نصنع التغيير.")}</p>'
         f'</div>',
         unsafe_allow_html=True,
     )
@@ -1500,8 +1515,8 @@ def show_about():
 def _footer():
     st.markdown(
         '<div class="app-footer">'
-        '© 2025 Sawt Taleb | صوت الطالب — Plateforme étudiante algérienne indépendante<br>'
-        'Données stockées localement · Aucune affiliation gouvernementale'
+        f'© 2025 Sawt Taleb | صوت الطالب — {l("Plateforme étudiante algérienne indépendante", "Independent Algerian student platform", "منصة طلابية جزائرية مستقلة")}<br>'
+        f'{l("Données stockées localement · Aucune affiliation gouvernementale", "Data stored locally · No government affiliation", "البيانات مخزنة محليًا · لا توجد جهة حكومية مرتبطة")}'
         '</div>',
         unsafe_allow_html=True,
     )
@@ -1530,7 +1545,7 @@ def build_sidebar():
         selected_code = lang_map[selected_label]
         if st.session_state.get("lang") != selected_code:
             st.session_state["lang"] = selected_code
-            st.experimental_rerun()
+            st.rerun()
 
         st.markdown("---")
 
@@ -1546,16 +1561,16 @@ def build_sidebar():
         stats = db.get_platform_stats()
         st.markdown(
             f'<div style="font-size:0.8rem;opacity:0.7;text-align:center">'
-            f'📊 {stats["total"]} signalements<br>'
-            f'🏫 {stats["universities"]} universités<br>'
-            f'✅ {stats["resolved"]} résolus'
+            f'📊 {stats["total"]} {l("signalements", "reports", "بلاغات")}<br>'
+            f'🏫 {stats["universities"]} {l("universités", "universities", "جامعات")}<br>'
+            f'✅ {stats["resolved"]} {l("résolus", "resolved", "محلولة")}'
             f'</div>',
             unsafe_allow_html=True,
         )
         st.markdown("---")
         st.markdown(
             '<div style="font-size:0.72rem;opacity:0.6;text-align:center">'
-            'v1.0 · Plateforme Étudiante<br>Algérie 🇩🇿'
+            f'v1.0 · {l("Plateforme Étudiante", "Student Platform", "منصة طلابية")}<br>{l("Algérie", "Algeria", "الجزائر")} 🇩🇿'
             '</div>',
             unsafe_allow_html=True,
         )
@@ -1578,7 +1593,7 @@ def main():
         "about": show_about,
     }
 
-    lang = st.session_state.get("lang", "fr")
+    lang = st.session_state.get("lang", "en")
     if lang == "ar":
         st.markdown('<div class="rtl">', unsafe_allow_html=True)
 
