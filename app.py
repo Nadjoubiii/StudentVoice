@@ -36,7 +36,7 @@ if "session_id" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state["page"] = "🏠 Accueil"
 if "lang" not in st.session_state:
-    st.session_state["lang"] = "fr"
+    st.session_state["lang"] = "en"
 if "submit_success" not in st.session_state:
     st.session_state["submit_success"] = None
 if "view_report_id" not in st.session_state:
@@ -134,9 +134,9 @@ TRANSLATIONS = {
 
 def t(key, **kwargs):
     """Return translated string for current session language."""
-    lang = st.session_state.get("lang", "fr")
+    lang = st.session_state.get("lang", "en")
     entry = TRANSLATIONS.get(key, {})
-    text = entry.get(lang) or entry.get("fr") or key
+    text = entry.get(lang) or entry.get("en") or entry.get("fr") or key
     try:
         return text.format(**kwargs)
     except Exception:
@@ -1523,9 +1523,9 @@ def build_sidebar():
         st.markdown("---")
 
         # Language selector
-        lang_map = {"Français": "fr", "English": "en", "العربية": "ar"}
+        lang_map = {"English": "en", "Français": "fr", "العربية": "ar"}
         labels = list(lang_map.keys())
-        current_label = next((lbl for lbl, code in lang_map.items() if code == st.session_state.get("lang", "fr")), labels[0])
+        current_label = next((lbl for lbl, code in lang_map.items() if code == st.session_state.get("lang", "en")), labels[0])
         selected_label = st.selectbox("Langue / Language / اللغة", labels, index=labels.index(current_label), key="lang_select")
         selected_code = lang_map[selected_label]
         if st.session_state.get("lang") != selected_code:
