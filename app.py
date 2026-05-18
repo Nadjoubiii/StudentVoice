@@ -156,6 +156,47 @@ TRANSLATIONS.update({
     "how.title": {"fr": "⚙️ Comment ça marche", "en": "⚙️ How it works", "ar": "⚙️ كيف تعمل المنصة"},
 })
 
+STATUS_I18N = {
+    "Signalé": {"en": "Reported", "ar": "تم الإبلاغ"},
+    "En cours d'examen": {"en": "Under review", "ar": "قيد المراجعة"},
+    "En cours de résolution": {"en": "Being resolved", "ar": "قيد المعالجة"},
+    "Résolu": {"en": "Resolved", "ar": "محلول"},
+    "Rejeté": {"en": "Rejected", "ar": "مرفوض"},
+}
+
+LOCATION_I18N = {
+    "Résidence universitaire (Cité U)": {"en": "University residence (dorm)", "ar": "الإقامة الجامعية"},
+    "Amphithéâtre / Salle de cours": {"en": "Amphitheater / Classroom", "ar": "مدرج / قاعة"},
+    "Laboratoire": {"en": "Laboratory", "ar": "مختبر"},
+    "Bibliothèque": {"en": "Library", "ar": "مكتبة"},
+    "Restaurant universitaire (RU)": {"en": "University restaurant", "ar": "المطعم الجامعي"},
+    "Administration": {"en": "Administration", "ar": "الإدارة"},
+    "Installations sportives": {"en": "Sports facilities", "ar": "المرافق الرياضية"},
+    "Espace extérieur / Campus": {"en": "Outdoor area / Campus", "ar": "المساحة الخارجية / الحرم"},
+    "Transport universitaire": {"en": "University transport", "ar": "النقل الجامعي"},
+    "Autre": {"en": "Other", "ar": "أخرى"},
+}
+
+CATEGORY_I18N = {
+    "🏗️ Infrastructures": {"en": "🏗️ Infrastructure", "ar": "🏗️ البنية التحتية"},
+    "🚽 Hygiène & Assainissement": {"en": "🚽 Hygiene & Sanitation", "ar": "🚽 النظافة والصرف"},
+    "🍽️ Alimentation & Restauration": {"en": "🍽️ Food & Catering", "ar": "🍽️ التغذية والمطعم"},
+    "🛏️ Hébergement & Résidences": {"en": "🛏️ Housing & Dorms", "ar": "🛏️ الإيواء والإقامات"},
+    "📚 Équipements Pédagogiques": {"en": "📚 Learning Equipment", "ar": "📚 التجهيزات البيداغوجية"},
+    "⚡ Eau & Électricité": {"en": "⚡ Water & Electricity", "ar": "⚡ الماء والكهرباء"},
+    "🔒 Sécurité": {"en": "🔒 Safety", "ar": "🔒 السلامة"},
+    "📡 Connectivité & Internet": {"en": "📡 Connectivity & Internet", "ar": "📡 الاتصال والإنترنت"},
+    "🚌 Transport": {"en": "🚌 Transport", "ar": "🚌 النقل"},
+    "📋 Administration": {"en": "📋 Administration", "ar": "📋 الإدارة"},
+}
+
+
+def tr_item(value, mapping):
+    lang = st.session_state.get("lang", "en")
+    if lang == "fr":
+        return value
+    return mapping.get(value, {}).get(lang, value)
+
 TRANSLATIONS.update({
     "submit.visible": {
         "fr": "🔍 Votre signalement est maintenant visible dans la section \"Explorer les Signalements\" et sera examiné par les équipes concernées.",
@@ -410,7 +451,8 @@ def inject_css():
 def status_badge(status):
     key = status.replace(" ", "_").replace("'", "")
     color = STATUS_COLORS.get(status, "#6b7280")
-    return f'<span class="badge" style="background:{color}22;color:{color}">{status}</span>'
+    label = tr_item(status, STATUS_I18N)
+    return f'<span class="badge" style="background:{color}22;color:{color}">{label}</span>'
 
 
 def severity_badge(sev):
@@ -643,13 +685,21 @@ def show_submit_report():
                              if selected_wilaya == l("(Toutes)", "(All)", "(الكل)") or u["wilaya"] == selected_wilaya]
             selected_uni_name = st.selectbox(l("Université / École *", "University / School *", "الجامعة / المدرسة *"), filtered_unis)
 
-        location_type = st.selectbox(l("Lieu concerné *", "Affected location *", "الموقع المتأثر *"), db.LOCATION_TYPES)
+        location_type = st.selectbox(
+            l("Lieu concerné *", "Affected location *", "الموقع المتأثر *"),
+            db.LOCATION_TYPES,
+            format_func=lambda x: tr_item(x, LOCATION_I18N),
+        )
 
         st.divider()
         st.markdown("### " + l("🗂️ Étape 2 – Classification du problème", "🗂️ Step 2 - Issue classification", "🗂️ الخطوة 2 - تصنيف المشكلة"))
         col3, col4 = st.columns(2)
         with col3:
-            selected_category = st.selectbox(l("Catégorie principale *", "Main category *", "الفئة الرئيسية *"), list(db.CATEGORIES.keys()))
+            selected_category = st.selectbox(
+                l("Catégorie principale *", "Main category *", "الفئة الرئيسية *"),
+                list(db.CATEGORIES.keys()),
+                format_func=lambda x: tr_item(x, CATEGORY_I18N),
+            )
         with col4:
             subcats = db.CATEGORIES.get(selected_category, ["Autre"])
             selected_subcat = st.selectbox(l("Sous-catégorie *", "Subcategory *", "الفئة الفرعية *"), subcats)
@@ -822,10 +872,25 @@ def show_browse_reports():
         st.markdown(f"### {t('browse.filters')}")
         search_q    = st.text_input("🔎 ", placeholder=t('browse.search.placeholder'))
         sel_uni     = st.selectbox(l("Université", "University", "الجامعة"), list(uni_options.keys()), key="browse_uni")
-        sel_cat     = st.selectbox(l("Catégorie", "Category", "الفئة"), [l("(Toutes)", "(All)", "(الكل)")] + list(db.CATEGORIES.keys()), key="browse_cat")
-        sel_loc     = st.selectbox(l("Lieu", "Location", "الموقع"), [l("(Tous)", "(All)", "(الكل)")] + db.LOCATION_TYPES, key="browse_loc")
+        sel_cat     = st.selectbox(
+            l("Catégorie", "Category", "الفئة"),
+            [l("(Toutes)", "(All)", "(الكل)")] + list(db.CATEGORIES.keys()),
+            key="browse_cat",
+            format_func=lambda x: x if x == l("(Toutes)", "(All)", "(الكل)") else tr_item(x, CATEGORY_I18N),
+        )
+        sel_loc     = st.selectbox(
+            l("Lieu", "Location", "الموقع"),
+            [l("(Tous)", "(All)", "(الكل)")] + db.LOCATION_TYPES,
+            key="browse_loc",
+            format_func=lambda x: x if x == l("(Tous)", "(All)", "(الكل)") else tr_item(x, LOCATION_I18N),
+        )
         sev_range   = st.slider(l("Gravité", "Severity", "الخطورة"), 1, 5, (1, 5), key="browse_sev")
-        sel_status  = st.selectbox(l("Statut", "Status", "الحالة"), [l("(Tous)", "(All)", "(الكل)")] + db.STATUS_OPTIONS, key="browse_status")
+        sel_status  = st.selectbox(
+            l("Statut", "Status", "الحالة"),
+            [l("(Tous)", "(All)", "(الكل)")] + db.STATUS_OPTIONS,
+            key="browse_status",
+            format_func=lambda x: x if x == l("(Tous)", "(All)", "(الكل)") else tr_item(x, STATUS_I18N),
+        )
         sort_by     = st.selectbox(
             l("Trier par", "Sort by", "ترتيب حسب"),
             {"newest": l("Plus récents", "Newest", "الأحدث"), "most_voted": l("Plus soutenus", "Most supported", "الأكثر دعمًا"), "severity": l("Plus graves", "Most severe", "الأكثر خطورة"), "oldest": l("Plus anciens", "Oldest", "الأقدم")}.keys(),
@@ -905,6 +970,7 @@ def show_browse_reports():
                     l("Statut", "Status", "الحالة"), db.STATUS_OPTIONS,
                     index=db.STATUS_OPTIONS.index(r["status"]) if r["status"] in db.STATUS_OPTIONS else 0,
                     key=f"status_{r['id']}",
+                    format_func=lambda x: tr_item(x, STATUS_I18N),
                 )
                 if st.button(l("Enregistrer", "Save", "حفظ"), key=f"save_status_{r['id']}"):
                     db.update_report_status(r["id"], new_status)
