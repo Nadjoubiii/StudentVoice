@@ -589,7 +589,7 @@ def show_home():
             with cols[i % 2]:
                 render_report_card(r)
     else:
-        st.info("Aucun signalement pour le moment. Soyez le premier à signaler !")
+        st.info(l("Aucun signalement pour le moment. Soyez le premier à signaler !", "No reports yet. Be the first to submit one!", "لا توجد بلاغات حتى الآن. كن أول من يرسل بلاغًا!"))
 
     # ── How it works ──
     st.markdown(f'<div class="section-header">{t("how.title")}</div>', unsafe_allow_html=True)
@@ -702,8 +702,7 @@ def show_submit_report():
         st.divider()
         st.markdown("### " + l("📸 Étape 4 – Preuves photographiques (optionnel)", "📸 Step 4 - Photo evidence (optional)", "📸 الخطوة 4 - أدلة مصورة (اختياري)"))
         st.markdown(
-            '<div class="info-box">📷 Ajoutez jusqu\'à <strong>5 photos</strong> pour appuyer votre signalement. '
-            'Les images seront redimensionnées automatiquement (max 10 Mo par fichier).</div>',
+            f'<div class="info-box">{l("📷 Ajoutez jusqu\'à <strong>5 photos</strong> pour appuyer votre signalement. Les images seront redimensionnées automatiquement (max 10 Mo par fichier).", "📷 Add up to <strong>5 photos</strong> to support your report. Images are resized automatically (max 10 MB per file).", "📷 أضف حتى <strong>5 صور</strong> لدعم بلاغك. سيتم تغيير حجم الصور تلقائيًا (حد أقصى 10 ميغابايت لكل ملف).")}</div>',
             unsafe_allow_html=True,
         )
         uploaded_files = st.file_uploader(
@@ -739,13 +738,12 @@ def show_submit_report():
             with col6:
                 reporter_email = st.text_input(l("Email universitaire", "University email", "البريد الجامعي"), placeholder="prenom.nom@univ-xx.dz")
             st.markdown(
-                '<div class="warn-box">🔒 Vos coordonnées ne seront <strong>jamais partagées publiquement</strong>. '
-                'Elles servent uniquement à vous contacter si nécessaire.</div>',
+                f'<div class="warn-box">{l("🔒 Vos coordonnées ne seront <strong>jamais partagées publiquement</strong>. Elles servent uniquement à vous contacter si nécessaire.", "🔒 Your details will <strong>never be shared publicly</strong>. They are only used to contact you if needed.", "🔒 لن تتم <strong>مشاركة بياناتك علنًا أبدًا</strong>. تُستخدم فقط للتواصل معك عند الحاجة.")}</div>',
                 unsafe_allow_html=True,
             )
         else:
             st.markdown(
-                '<div class="info-box">🕵️ Mode anonyme activé – votre identité sera complètement protégée.</div>',
+                f'<div class="info-box">{l("🕵️ Mode anonyme activé – votre identité sera complètement protégée.", "🕵️ Anonymous mode enabled - your identity is fully protected.", "🕵️ تم تفعيل الوضع المجهول - هويتك محمية بالكامل.")}</div>',
                 unsafe_allow_html=True,
             )
 
@@ -1305,8 +1303,8 @@ def show_union_portal():
         uni_names    = [u["name"] for u in universities]
         col_a, col_b = st.columns(2)
         with col_a:
-            letter_uni  = st.selectbox("Université concernée", uni_names, key="letter_uni")
-            letter_dest = st.selectbox("Destinataire", [
+            letter_uni  = st.selectbox(l("Université concernée", "Concerned university", "الجامعة المعنية"), uni_names, key="letter_uni")
+            letter_dest = st.selectbox(l("Destinataire", "Recipient", "الجهة المستلمة"), [
                 "Le Recteur / Président de l'Université",
                 "Le Directeur des Œuvres Universitaires (DOU)",
                 "Le Ministre de l'Enseignement Supérieur",
@@ -1314,12 +1312,12 @@ def show_union_portal():
                 "Le Directeur du CROUS",
             ])
         with col_b:
-            union_name  = st.text_input("Nom du syndicat / union", placeholder="Ex: UGEL, UNEA, Bureau Syndical de …")
-            rep_name    = st.text_input("Nom du représentant", placeholder="Ex: Mohamed Ammari")
+            union_name  = st.text_input(l("Nom du syndicat / union", "Union name", "اسم النقابة / الاتحاد"), placeholder=l("Ex: UGEL, UNEA, Bureau Syndical de …", "Ex: UGEL, UNEA, Student Union Office of ...", "مثال: UGEL أو UNEA أو مكتب الاتحاد ..."))
+            rep_name    = st.text_input(l("Nom du représentant", "Representative name", "اسم الممثل"), placeholder="Ex: Mohamed Ammari")
 
-        if st.button("📝 Générer la lettre", use_container_width=True):
+        if st.button(l("📝 Générer la lettre", "📝 Generate letter", "📝 إنشاء الرسالة"), use_container_width=True):
             if not union_name or not rep_name:
-                st.warning("Veuillez renseigner le nom de votre syndicat et votre nom.")
+                st.warning(l("Veuillez renseigner le nom de votre syndicat et votre nom.", "Please provide your union name and your name.", "يرجى إدخال اسم نقابتك واسمك."))
             else:
                 uni_stats = db.get_university_stats(
                     next(u["id"] for u in universities if u["name"] == letter_uni)
@@ -1372,9 +1370,9 @@ Dans l'attente d'une réponse favorable,
 Au nom de {union_name}
 Date : {datetime.now().strftime("%d/%m/%Y")}
 """
-                st.text_area("📄 Lettre générée (copiez et personnalisez)", letter, height=500)
+                st.text_area(l("📄 Lettre générée (copiez et personnalisez)", "📄 Generated letter (copy and customize)", "📄 الرسالة المُنشأة (انسخ وعدّل)"), letter, height=500)
                 st.download_button(
-                    "⬇️ Télécharger la lettre (.txt)",
+                    l("⬇️ Télécharger la lettre (.txt)", "⬇️ Download letter (.txt)", "⬇️ تنزيل الرسالة (.txt)"),
                     data=letter.encode("utf-8"),
                     file_name=f"lettre_advocacy_{datetime.now().strftime('%Y%m%d')}.txt",
                     mime="text/plain",
@@ -1398,7 +1396,8 @@ def show_about():
 
     with col1:
         st.markdown("### " + l("🎯 Notre Mission", "🎯 Our mission", "🎯 مهمتنا"))
-        st.markdown("""
+        st.markdown(l(
+            """
         **Sawt Taleb** (صوت الطالب — "La Voix de l'Étudiant") est une plateforme citoyenne
         permettant aux étudiants algériens de :
 
@@ -1408,19 +1407,52 @@ def show_about():
         - **Impacter** en fournissant des données aux unions étudiantes pour l'advocacy
 
         Notre objectif est simple : **transformer la frustration en action collective**.
-        """)
+        """,
+            """
+        **Sawt Taleb** is a civic platform that helps Algerian students to:
+
+        - **Report** infrastructure, hygiene, food, and housing issues
+        - **Document** problems with photo evidence
+        - **Mobilize** by supporting other student reports
+        - **Create impact** by providing data to student unions for advocacy
+
+        Our goal is simple: **turn frustration into collective action**.
+        """,
+            """
+        **صوت الطالب** منصة مدنية تساعد طلبة الجزائر على:
+
+        - **الإبلاغ** عن مشاكل البنية التحتية والنظافة والتغذية والإيواء
+        - **التوثيق** بالأدلة المصورة
+        - **الحشد** عبر دعم بلاغات الطلبة الآخرين
+        - **إحداث الأثر** من خلال تزويد اتحادات الطلبة بالبيانات للمناصرة
+
+        هدفنا بسيط: **تحويل الإحباط إلى عمل جماعي**.
+        """
+        ))
 
         st.markdown("### " + l("🔒 Confidentialité & Sécurité", "🔒 Privacy & security", "🔒 الخصوصية والأمان"))
-        st.markdown("""
+        st.markdown(l("""
         - Les signalements anonymes sont **totalement protégés**
         - Aucune donnée personnelle n'est partagée avec des tiers
         - Les photos uploadées ne contiennent pas de métadonnées EXIF
         - La plateforme ne nécessite aucune inscription
-        """)
+        """,
+        """
+        - Anonymous reports are **fully protected**
+        - No personal data is shared with third parties
+        - Uploaded photos do not include EXIF metadata
+        - The platform requires no account registration
+        """,
+        """
+        - البلاغات المجهولة **محمية بالكامل**
+        - لا تتم مشاركة أي بيانات شخصية مع جهات خارجية
+        - الصور المرفوعة لا تتضمن بيانات EXIF
+        - المنصة لا تتطلب إنشاء حساب
+        """))
 
     with col2:
         st.markdown("### " + l("📖 Comment utiliser la plateforme", "📖 How to use the platform", "📖 كيفية استخدام المنصة"))
-        st.markdown("""
+        st.markdown(l("""
         **1. Soumettre un signalement**
         Rendez-vous sur "📝 Soumettre un Signalement" et remplissez le formulaire en 6 étapes.
         Plus votre description est détaillée, plus elle sera efficace.
@@ -1439,30 +1471,88 @@ def show_about():
         **5. Portail Union**
         Les syndicats accèdent au "🏛️ Portail Union" pour exporter les données
         et générer des lettres officielles d'advocacy.
-        """)
+        """,
+        """
+        **1. Submit a report**
+        Go to "📝 Submit Report" and complete the 6-step form.
+        The more detailed your description, the more useful it is.
+
+        **2. Explore reports**
+        Use "🔍 Explore" to browse all reports and filter by university,
+        category, severity, and more.
+
+        **3. Support reports**
+        Click 🤍 "Support" on reports that affect you too.
+        The more support, the higher the priority.
+
+        **4. Dashboard**
+        The "📊 Dashboard" gives visual analytics per university.
+
+        **5. Union portal**
+        Student unions can use the "🏛️ Union Portal" to export data
+        and generate official advocacy letters.
+        """,
+        """
+        **1. إرسال بلاغ**
+        انتقل إلى "📝 تقديم بلاغ" واملأ النموذج من 6 خطوات.
+        كلما كان الوصف أدق كان أكثر فاعلية.
+
+        **2. استعراض البلاغات**
+        استخدم "🔍 استعرض" لرؤية كل البلاغات مع المرشحات
+        حسب الجامعة والفئة والخطورة وغيرها.
+
+        **3. دعم البلاغات**
+        اضغط 🤍 "دعم" على البلاغات التي تؤثر عليك أيضًا.
+        كلما زاد الدعم ارتفعت الأولوية.
+
+        **4. لوحة القيادة**
+        توفر "📊 لوحة القيادة" تحليلات مرئية لكل جامعة.
+
+        **5. بوابة الاتحاد**
+        يمكن لاتحادات الطلبة استخدام "🏛️ بوابة الاتحاد" لتصدير البيانات
+        وإنشاء رسائل مناصرة رسمية.
+        """))
 
     st.markdown("---")
     st.markdown("### " + l("❓ Questions Fréquentes", "❓ Frequently asked questions", "❓ الأسئلة الشائعة"))
 
     faqs = [
-        ("Mes signalements sont-ils vraiment anonymes ?",
-         "Oui. Si vous cochez 'Anonyme', aucune information d'identification n'est stockée. "
-         "Votre adresse IP n'est pas enregistrée non plus."),
-        ("Qui peut voir mes signalements ?",
-         "Tous les signalements approuvés sont visibles publiquement. Si vous signaler quelque chose "
-         "de sensible, choisissez l'option anonyme."),
-        ("Qui gère les réponses aux signalements ?",
-         "La plateforme est un outil de documentation. Les réponses aux problèmes dépendent des "
-         "administrations universitaires et des autorités compétentes."),
-        ("Comment savoir si mon problème a été résolu ?",
-         "Le statut de chaque signalement est mis à jour dans l'application. Vous pouvez le suivre "
-         "en notant le numéro de votre signalement (affiché après soumission)."),
-        ("Puis-je signaler au nom d'autres étudiants ?",
-         "Oui. Vous pouvez soumettre un signalement collectif en mentionnant le nombre d'étudiants "
-         "affectés dans la description."),
-        ("La plateforme est-elle officielle ?",
-         "Non. Sawt Taleb est une initiative étudiante indépendante. Elle n'est pas affiliée "
-         "au Ministère de l'Enseignement Supérieur."),
+        (
+            l("Mes signalements sont-ils vraiment anonymes ?", "Are my reports truly anonymous?", "هل بلاغاتي مجهولة فعلاً؟"),
+            l("Oui. Si vous cochez 'Anonyme', aucune information d'identification n'est stockée. Votre adresse IP n'est pas enregistrée non plus.",
+              "Yes. If you choose anonymous mode, no identifying information is stored. Your IP is not recorded either.",
+              "نعم. إذا اخترت الوضع المجهول فلن تُخزَّن أي بيانات تعريفية، كما لا يتم تسجيل عنوان IP."),
+        ),
+        (
+            l("Qui peut voir mes signalements ?", "Who can see my reports?", "من يمكنه رؤية بلاغاتي؟"),
+            l("Tous les signalements approuvés sont visibles publiquement. Si vous signaler quelque chose de sensible, choisissez l'option anonyme.",
+              "All approved reports are publicly visible. If your issue is sensitive, use the anonymous option.",
+              "كل البلاغات المعتمدة مرئية للجميع. إذا كانت المشكلة حساسة فاختر خيار الإرسال المجهول."),
+        ),
+        (
+            l("Qui gère les réponses aux signalements ?", "Who handles responses to reports?", "من يتابع الردود على البلاغات؟"),
+            l("La plateforme est un outil de documentation. Les réponses aux problèmes dépendent des administrations universitaires et des autorités compétentes.",
+              "The platform is a documentation tool. Responses depend on university administrations and competent authorities.",
+              "المنصة أداة توثيق، أما المعالجة الفعلية للمشكلات فتعتمد على إدارات الجامعات والجهات المختصة."),
+        ),
+        (
+            l("Comment savoir si mon problème a été résolu ?", "How do I know if my issue was resolved?", "كيف أعرف أن مشكلتي تم حلها؟"),
+            l("Le statut de chaque signalement est mis à jour dans l'application. Vous pouvez le suivre en notant le numéro de votre signalement (affiché après soumission).",
+              "Each report status is updated in the app. Track it using your report number shown after submission.",
+              "يتم تحديث حالة كل بلاغ داخل التطبيق. يمكنك المتابعة عبر رقم البلاغ الذي يظهر بعد الإرسال."),
+        ),
+        (
+            l("Puis-je signaler au nom d'autres étudiants ?", "Can I report on behalf of other students?", "هل يمكنني الإبلاغ نيابة عن طلبة آخرين؟"),
+            l("Oui. Vous pouvez soumettre un signalement collectif en mentionnant le nombre d'étudiants affectés dans la description.",
+              "Yes. You can submit a collective report and mention how many students are affected.",
+              "نعم. يمكنك إرسال بلاغ جماعي مع ذكر عدد الطلبة المتأثرين في الوصف."),
+        ),
+        (
+            l("La plateforme est-elle officielle ?", "Is the platform official?", "هل المنصة رسمية؟"),
+            l("Non. Sawt Taleb est une initiative étudiante indépendante. Elle n'est pas affiliée au Ministère de l'Enseignement Supérieur.",
+              "No. Sawt Taleb is an independent student initiative and is not affiliated with the Ministry.",
+              "لا. صوت الطالب مبادرة طلابية مستقلة وليست تابعة للوزارة."),
+        ),
     ]
 
     for question, answer in faqs:
@@ -1473,23 +1563,47 @@ def show_about():
     st.markdown("### " + l("📞 Contact & Signalement d'Abus", "📞 Contact & abuse reporting", "📞 التواصل والإبلاغ عن الإساءة"))
     col_a, col_b, col_c = st.columns(3)
     with col_a:
-        st.markdown("""
+        st.markdown(l("""
         **📧 Contact général**
         contact@sawttaleb.dz
         *(adresse fictive pour la démo)*
-        """)
+        """, """
+        **📧 General contact**
+        contact@sawttaleb.dz
+        *(demo placeholder address)*
+        """, """
+        **📧 تواصل عام**
+        contact@sawttaleb.dz
+        *(عنوان تجريبي للعرض)*
+        """))
     with col_b:
-        st.markdown("""
+        st.markdown(l("""
         **🐛 Signaler un bug**
         Utilisez le formulaire de signalement
         avec la catégorie "Administration".
-        """)
+        """, """
+        **🐛 Report a bug**
+        Use the report form
+        with the "Administration" category.
+        """, """
+        **🐛 الإبلاغ عن عطل**
+        استخدم نموذج البلاغ
+        ضمن فئة "الإدارة".
+        """))
     with col_c:
-        st.markdown("""
+        st.markdown(l("""
         **🤝 Contribuer**
         La plateforme est open source.
         Rejoignez-nous sur GitHub !
-        """)
+        """, """
+        **🤝 Contribute**
+        The platform is open source.
+        Join us on GitHub!
+        """, """
+        **🤝 المساهمة**
+        المنصة مفتوحة المصدر.
+        انضم إلينا على GitHub!
+        """))
 
     # Stats finale
     st.markdown("---")
